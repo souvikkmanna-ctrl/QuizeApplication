@@ -1,9 +1,8 @@
+import React from "react";
 import QuizApp from "./QuizApp";
 
 function App() {
-  return (
-    <QuizApp />
-  );
+  return <QuizApp />;
 }
 
 export default App;

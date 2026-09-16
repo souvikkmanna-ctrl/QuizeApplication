@@ -1,22 +1,52 @@
-import { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 
-function Timer({ timeLeft, setTimeLeft, onTimeUp }) {
+function formatTime(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+}
+
+function Timer({ timeLeft, setTimeLeft, onTimeUp, isActive = true }) {
+  const onTimeUpRef = useRef(onTimeUp);
+  const hasTriggeredRef = useRef(false);
+
   useEffect(() => {
-    if (timeLeft <= 0) {
-      onTimeUp();
-      return;
+    onTimeUpRef.current = onTimeUp;
+  }, [onTimeUp]);
+
+  useEffect(() => {
+    if (timeLeft > 0) {
+      hasTriggeredRef.current = false;
     }
+  }, [timeLeft]);
+
+  useEffect(() => {
+    if (!isActive) return;
 
     const timer = setInterval(() => {
-      setTimeLeft((previousTime) => previousTime - 1);
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          if (!hasTriggeredRef.current) {
+            hasTriggeredRef.current = true;
+            onTimeUpRef.current?.();
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft, setTimeLeft, onTimeUp]);
+  }, [isActive, setTimeLeft]);
 
   return (
-    <div className={timeLeft <= 10 ? "timer warning" : "timer"}>
-      ⏱️ Time Left: {timeLeft} seconds
+    <div
+      className={`timer ${timeLeft <= 10 ? "warning" : ""}`}
+      role="timer"
+      aria-live="polite"
+    >
+      ⏱️ Time Left: {formatTime(timeLeft)}
     </div>
   );
 }
